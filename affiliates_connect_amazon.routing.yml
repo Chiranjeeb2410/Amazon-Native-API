@@ -7,3 +7,39 @@ affiliates_connect_amazon.settings:
     _permission: 'access administration pages'
   options:
     _admin_route: TRUE
+
+affiliates_connect_amazon.get:
+  path: '/admin/config/affiliates-connect/amazon/get.json'
+  defaults:
+    _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::get_data'
+  methods:  [GET]
+  options:
+    _auth: ['basic_auth']
+  requirements:
+    _access: 'TRUE'
+
+affiliates_connect_amazon.post:
+  path: '/admin/config/affiliates-connect/amazon/post.json'
+  defaults:
+    _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::post_data'
+  methods:  [POST]
+  options:
+    _auth: ['basic_auth']
+  requirements:
+    _access: 'TRUE'
+
+# affiliates_connect_amazon.put:
+#   path: '/admin/config/affiliates-connect/amazon/put.json'
+#   defaults:
+#     _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::put_example'
+#   methods:  [PUT]
+#   requirements:
+#     _access: 'TRUE'
+
+# affiliates_connect_amazon.delete:
+#   path: '/admin/config/affiliates-connect/amazon/delete.json'
+#   defaults:
+#     _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::delete_example'
+#   methods:  [DELETE]
+#   requirements:
+#     _access: 'TRUE'
