@@ -2,11 +2,16 @@
 
 namespace Drupal\affiliates_connect_amazon\Plugin\rest\resource;
 
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpFoundation\Request;
+use Psr\Log\LoggerInterface;
+use Drupal\node\Entity\Node;
 
 /**
  * Provides resource to get all required Product Advertising API operations
@@ -20,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  *   }
  * )
  */
-class MyRest extends ResourceBase {
+class AmazonRestResource extends ResourceBase {
 
   /**
    *  A curent user instance.
@@ -74,7 +79,7 @@ class MyRest extends ResourceBase {
       $plugin_id,
       $plugin_definition,
       $container->getParameter('serializer.formats'),
-      $container->get('logger.factory')->get('example_rest'),
+      $container->get('logger.factory')->get('affiliates_connect_amazon'),
       $container->get('current_user'),
       $container->get('request_stack')->getCurrentRequest()
     );
@@ -86,13 +91,27 @@ class MyRest extends ResourceBase {
    * Returns details of a course node.
    *
    * @return \Drupal\rest\ResourceResponse
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+   *   Throws exception expected.
    */
   public function get($nid = NULL) {
-    // If the request has the parameter 'values=all' in it then do something
-
+    // If the request has the parameter 'values=all' in it then store the string
+    // response and return the response if validated.
     if ($this->currentRequest->query->get('values') == 'all') {
-     Do stuff....
+      global $api_access_id;
+      $api_access_id = 'https://www.amazon.com/gp/product/';
+      $api_secret_key = \Drupal::config('AffiliatesAmazonSettingsForm')->get('native_affiliate_secret_key');
+      $uri = "amazon_rest_resource?api_secret_key=";
+      $absolute_url = $api_url.$uri.$api_secret_key;
+      $response = \Drupal::httpClient()
+          ->get($absolute_url , [
+              'auth' => ['basic', 'passwd'],
+          ]);
+     $response = ['message' => 'Generating Rest service response'];
+     return new ResourceResponse($response);
     }
+
   }
 
 }
