@@ -8,9 +8,11 @@
 namespace Drupal\affiliates_connect_amazon\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Controller routines for test_api routes.
@@ -20,42 +22,56 @@ class TestAPIController extends ControllerBase {
   /**
    * Callback for `my-api/get.json` API method.
    */
-  public function get_example( Request $request ) {
-    $response['data'] = 'Return test product data';
-    $response['method'] = 'GET';
-    return new JsonResponse( $response );
-  }
+  public function get() {
 
-  /**
-   * Callback for `my-api/post.json` API method.
-   */
-  public function post_example( Request $request ) {
-    // This condition checks the `Content-type` and makes sure to
-    // decode JSON string from the request body into array.
-    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
-      $data = json_decode( $request->getContent(), TRUE );
-      $request->request->replace( is_array( $data ) ? $data : [] );
+    $client = new Client();
+
+    $associate_id = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
+    $access_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
+    $secret_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_secret_key');
+
+    $results = [];
+    foreach(array_chunk($items, 10) as $asins) {
+      $request = new AmazonRequest($this->$secret_key, $this->$access_key, $this->$associate_id);
+      $request->setOptions([
+        'Service' => 'AWSECommerceService',
+        'ItemId' => implode(',', $asins),
+        'ResponseGroup' => 'Small,Images',
+        'Operation' => 'ItemLookup',
+      ]);
+      $results = array_merge($results, $request->execute()->getResults());
     }
-    $response['data'] = 'Return test data';
-    $response['method'] = 'POST';
-    return new JsonResponse( $response );
+    return $results;
+
+    $url = 'http://webservices.amazon.com/onca/xml' . $associate_id . '.xml';
+
+    try {
+      $response = $client->get($url, [
+        'results' => $results,
+      ]);
+      $contents = new SimpleXMLElement($response->getBody()->getContents());
+      $json = json_encode($contents);
+      $body = json_decode($json, true);
+    }
+    catch (RequestException $e) {
+      $args = ['%site' => $url, '%error' => $e->getMessage()];
+      throw new \RuntimeException($this->t('This %site seems to be broken because of error "%error".', $args));
+    }
+    print_r($body);
   }
 
 #  /**
-#   * Callback for `my-api/put.json` API method.
+#   * Callback for `affiliates_connect_amazon/post.json` API method.
 #   */
-#  public function put_example( Request $request ) {
-#    $response['data'] = 'Some test data to return';
-#    $response['method'] = 'PUT';
-#    return new JsonResponse( $response );
-#  }
-
-#  /**
-#   * Callback for `my-api/delete.json` API method.
-#   */
-#  public function delete_example( Request $request ) {
-#    $response['data'] = 'Some test data to return';
-#    $response['method'] = 'DELETE';
+#  public function post_example( Request $request ) {
+#    // This condition checks the `Content-type` and makes sure to
+#    // decode JSON string from the request body into array.
+#    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+#      $data = json_decode( $request->getContent(), TRUE );
+#      $request->request->replace( is_array( $data ) ? $data : [] );
+#    }
+#    $response['data'] = 'Return test data';
+#    $response['method'] = 'POST';
 #    return new JsonResponse( $response );
 #  }
 

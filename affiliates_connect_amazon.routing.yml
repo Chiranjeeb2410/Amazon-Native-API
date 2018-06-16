@@ -9,24 +9,24 @@ affiliates_connect_amazon.settings:
     _admin_route: TRUE
 
 affiliates_connect_amazon.get:
-  path: '/admin/config/affiliates-connect/amazon/get.json'
+  path: '/admin/config/affiliates-connectamazon/product-data'
   defaults:
-    _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::get_data'
+    _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::get'
   methods:  [GET]
   options:
     _auth: ['basic_auth']
   requirements:
     _access: 'TRUE'
 
-affiliates_connect_amazon.post:
-  path: '/admin/config/affiliates-connect/amazon/post.json'
-  defaults:
-    _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::post_data'
-  methods:  [POST]
-  options:
-    _auth: ['basic_auth']
-  requirements:
-    _access: 'TRUE'
+# affiliates_connect_amazon.post:
+#   path: '/admin/config/affiliates-connect/amazon/post.json'
+#   defaults:
+#     _controller: '\Drupal\affiliates_connect_amazon\Controller\AmazonTestAPIController::post_data'
+#   methods:  [POST]
+#   options:
+#     _auth: ['basic_auth']
+#   requirements:
+#     _access: 'TRUE'
 
 # affiliates_connect_amazon.put:
 #   path: '/admin/config/affiliates-connect/amazon/put.json'
