@@ -3,8 +3,6 @@
 namespace Drupal\affiliates_connect_amazon\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\affiliates_connect\Form\AffiliatesConnectSettingsForm;
 
 /**
@@ -57,19 +55,21 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#open' => TRUE,
       '#states' => [
         "visible" => [
-          "input[name='native_api']" => ["checked" => TRUE]],
+          "input[name='native_api']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
-    $form['amazon_settings']['native_api_form']['native_access_key_id'] = [
+    $form['amazon_settings']['native_api_form']['amazon_associate_id'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Access Key ID'),
-      '#default_value' => $config->get('native_access_key_id'),
+      '#title' => $this->t('Affiliate Tracking ID'),
+      '#default_value' => $config->get('amazon_associate_id'),
       '#size' => 60,
       '#maxlength' => 60,
       '#states' => [
         "required" => [
-          "input[name='native_api']" => ["checked" => TRUE]],
+          "input[name='native_api']" => ["checked" => TRUE],
+        ],
       ],
       '#machine_name' => [
         'exists' => [
@@ -79,15 +79,35 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       ],
     ];
 
-    $form['amazon_settings']['native_api_form']['native_affiliate_secret_key'] = [
+    $form['amazon_settings']['native_api_form']['amazon_access_key'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Secret key'),
-      '#default_value' => $config->get('native_affiliate_secret_key'),
+      '#title' => $this->t('Access Key'),
+      '#default_value' => $config->get('amazon_access_key'),
       '#size' => 60,
       '#maxlength' => 60,
       '#states' => [
         "required" => [
-          "input[name='native_api']" => ["checked" => TRUE]],
+          "input[name='native_api']" => ["checked" => TRUE],
+        ],
+      ],
+      '#machine_name' => [
+        'exists' => [
+          $this,
+          'exists',
+        ],
+      ],
+    ];
+
+    $form['amazon_settings']['native_api_form']['amazon_secret_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Secret key'),
+      '#default_value' => $config->get('amazon_secret_key'),
+      '#size' => 60,
+      '#maxlength' => 60,
+      '#states' => [
+        "required" => [
+          "input[name='native_api']" => ["checked" => TRUE],
+        ],
       ],
       '#machine_name' => [
         'exists' => [
@@ -116,8 +136,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Plugin Storage Token'),
       '#open' => TRUE,
       '#states' => [
-         "visible" => [
-           "input[name='data_storage']" => ["checked" => TRUE]],
+        "visible" => [
+          "input[name='data_storage']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -125,17 +146,18 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#type' => 'select',
       '#title' => $this->t('Import period for Affiliate API'),
       '#options' => [
-         'every_day' => $this->t('Everyday'),
-         'every_15_days' => $this->t('Every 15 days'),
-         'every_week' => $this->t('Every week'),
-         'every_week' => $this->t('Every month'),
+        'every_day' => $this->t('Everyday'),
+        'every_15_days' => $this->t('Every 15 days'),
+        'every_week' => $this->t('Every week'),
+        'every_week' => $this->t('Every month'),
       ],
       '#attributes' => ['class' => ['select-bbq-selector']],
       '#empty_option' => 'Select',
       '#default_value' => $config->get('affiliate_import'),
       '#states' => [
         "required" => [
-          "input[name='data_storage']" => ["checked" => TRUE]],
+          "input[name='data_storage']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -143,17 +165,18 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#type' => 'select',
       '#title' => $this->t('Import period for Scraper API'),
       '#options' => [
-         'every_day' => $this->t('Everyday'),
-         'every_15_days' => $this->t('Every 15 days'),
-         'every_week' => $this->t('Every week'),
-         'every_week' => $this->t('Every month'),
+        'every_day' => $this->t('Everyday'),
+        'every_15_days' => $this->t('Every 15 days'),
+        'every_week' => $this->t('Every week'),
+        'every_week' => $this->t('Every month'),
       ],
       '#attributes' => ['class' => ['select-bbq-selector']],
       '#empty_option' => 'Select',
       '#default_value' => $config->get('scraper_import'),
       '#states' => [
-         "required" => [
-           "input[name='data_storage']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='data_storage']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -169,8 +192,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Content Scrape Token'),
       '#open' => TRUE,
       '#states' => [
-         "visible" => [
-           "input[name='content_scrape']" => ["checked" => TRUE]],
+        "visible" => [
+          "input[name='content_scrape']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -178,20 +202,21 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#type' => 'select',
       '#title' => $this->t('Import period for content scraping'),
       '#options' => [
-         'every_30_mins' => $this->t('Every 30 mins'),
-         'every_hour' => $this->t('Every 1 hour'),
-         'every_2_hours' => $this->t('Every 2 hours'),
-         'every_5_hours' => $this->t('Every 5 hours'),
-         'every_10_hours' => $this->t('Every 10 hours'),
-         'every_15_hours' => $this->t('Every 15 hours'),
-         'every_20_hours' => $this->t('Every 20 hours'),
+        'every_30_mins' => $this->t('Every 30 mins'),
+        'every_hour' => $this->t('Every 1 hour'),
+        'every_2_hours' => $this->t('Every 2 hours'),
+        'every_5_hours' => $this->t('Every 5 hours'),
+        'every_10_hours' => $this->t('Every 10 hours'),
+        'every_15_hours' => $this->t('Every 15 hours'),
+        'every_20_hours' => $this->t('Every 20 hours'),
       ],
       '#attributes' => ['class' => ['select-bbq-selector']],
       '#empty_option' => 'Select',
       '#default_value' => $config->get('scrape_timer'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -200,8 +225,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Full Content'),
       '#default_value' => $config->get('full_content'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -210,8 +236,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Reviews'),
       '#default_value' => $config->get('reviews'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -220,8 +247,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Availability'),
       '#default_value' => $config->get('available'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -230,8 +258,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Size'),
       '#default_value' => $config->get('size'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -240,8 +269,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Color'),
       '#default_value' => $config->get('color'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -250,8 +280,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Offers'),
       '#default_value' => $config->get('offers'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -260,8 +291,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
       '#title' => $this->t('Others'),
       '#default_value' => $config->get('others'),
       '#states' => [
-         "required" => [
-           "input[name='content_scrape_form']" => ["checked" => TRUE]],
+        "required" => [
+          "input[name='content_scrape_form']" => ["checked" => TRUE],
+        ],
       ],
     ];
 
@@ -276,8 +308,9 @@ class AffiliatesAmazonSettingsForm extends AffiliatesConnectSettingsForm {
 
     $this->config('affiliates_connect_amazon.settings')
       ->set('native_api', $values['native_api'])
-      ->set('native_access_key_id', $values['native_access_key_id'])
-      ->set('native_affiliate_secret_key', $values['native_affiliate_secret_key'])
+      ->set('amazon_associate_id', $values['amazon_associate_id'])
+      ->set('amazon_access_key', $values['amazon_access_key'])
+      ->set('amazon_secret_key', $values['amazon_secret_key'])
       ->set('scraper_api', $values['scraper_api'])
       ->set('data_storage', $values['data_storage'])
       ->set('affiliate_import', $values['affiliate_import'])

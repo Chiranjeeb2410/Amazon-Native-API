@@ -5,10 +5,13 @@ affiliates_connect_amazon.settings:
     native_api:
       type: boolean
       label: 'Allows usage Affiliate Marketing using tracking ID'
-    native_access_key_id:
+    amazon_associate_id:
       type: string
       label: 'Input associated ID of corresponding Affiliate API'
-    native_affiliate_secret_key:
+    amazon_access_key:
+      type: string
+      label: 'Input access key of corresponding Affiliate API'
+    amazon_secret_key:
       type: string
       label: 'Input associated token of corresponding Affiliate API'
     scraper_api:

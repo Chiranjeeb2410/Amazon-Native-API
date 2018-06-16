@@ -1,6 +1,7 @@
 native_api: true
-native_access_key_id:
-native_affiliate_secret_key:
+amazon_associate_id:
+amazon_access_key:
+amazon_secret_key:
 scraper_api: true
 data_storage: true
 affiliate_import:
