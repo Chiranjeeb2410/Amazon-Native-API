@@ -20,15 +20,49 @@ use GuzzleHttp\Exception\RequestException;
 class TestAPIController extends ControllerBase {
 
   /**
-   * Callback for `my-api/get.json` API method.
+   * The Guzzle client.
+   *
+   * @var \GuzzleHttp\Client
    */
-  public function get() {
+  protected $client;
+
+  /**
+   * Collect response from affiliate api url.
+   *
+   * @param string $url
+   *   The API endpoint through which the request is to be made.
+   *
+   * @return \Guzzle\Http\Message\Response
+   *   The Guzzle response.
+   */
+  public function get($url) {
 
     $client = new Client();
+
+    try {
+      $response = $client->get($url);
+    }
+    catch (RequestException $e) {
+      $args = ['%site' => $url, '%error' => $e->getMessage()];
+      throw new \RuntimeException($this->t('This %site seems to be broken because of error "%error".', $args));
+    }
+
+    return $response;
+  }
+
+  /**
+   * Fetches product categories.
+   *
+   * @return array
+   *   Collection of categories along with endpoint url.
+   */
+  public function categories() {
 
     $associate_id = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
     $access_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
     $secret_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_secret_key');
+
+    $url = 'http://webservices.amazon.com/onca/xml' . $associate_id . '.xml';
 
     $results = [];
     foreach(array_chunk($items, 10) as $asins) {
@@ -43,22 +77,20 @@ class TestAPIController extends ControllerBase {
     }
     return $results;
 
-    $url = 'http://webservices.amazon.com/onca/xml' . $associate_id . '.xml';
+    $response = $client->get($url, [
+      'results' => $results,
+    ]);
+    $contents = new SimpleXMLElement($response->getBody()->getContents());
+    $json = json_encode($contents);
+    $body = json_decode($json, true);
 
-    try {
-      $response = $client->get($url, [
-        'results' => $results,
-      ]);
-      $contents = new SimpleXMLElement($response->getBody()->getContents());
-      $json = json_encode($contents);
-      $body = json_decode($json, true);
+    $categories = [];
+    foreach ($body['apiGroups']['affiliate']['apiLists'] as $key => $value) {
+      $categories[$key] = $value['availabletypes']['v1.1.0']['get'];
     }
-    catch (RequestException $e) {
-      $args = ['%site' => $url, '%error' => $e->getMessage()];
-      throw new \RuntimeException($this->t('This %site seems to be broken because of error "%error".', $args));
-    }
-    print_r($body);
+    return $categories;
   }
+
 
 #  /**
 #   * Callback for `affiliates_connect_amazon/post.json` API method.
