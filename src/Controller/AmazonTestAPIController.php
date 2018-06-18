@@ -8,6 +8,7 @@
 namespace Drupal\affiliates_connect_amazon\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -28,7 +29,75 @@ class TestAPIController extends ControllerBase {
   protected $client;
 
   /**
-   * Collect response from affiliate api url.
+   * @var string
+   *   Cache for the Amazon PA API's access key.
+   */
+  protected $access_key;
+
+  /**
+   * @var string
+   *   Cache for the Amazon PA API's secret key.
+   */
+  protected $secret_key;
+
+  /**
+   * @var string
+   *   Cache for the Amazon PA API's Associate ID.
+   */
+  protected $associate_id;
+
+  /**
+   * Provides an Amazon object for calling the Amazon API.
+   *
+   * @param string $associate_id
+   *   The Amazon PA API's Associate ID.
+   *
+   * @param string $access_key
+   *   Access key to use for all API requests.
+   *
+   * @param string $secret_key
+   *   Secret to use for all API requests.
+   */
+  public function __construct($associate_id, $access_key = '', $secret_key = '') {
+    $this->associate_id = $associate_id;
+    if (empty($access_key)) {
+      $this->access_key = self::getAccessKey();
+    }
+    else {
+      $this->access_key = $access_key;
+    }
+    if (empty($secret_key)) {
+      $this->secret_key = self::getSecretKey();
+    }
+    else {
+      $this->secret_key = $access_key;
+    }
+  }
+
+  /**
+   * Returns the secret key needed for API calls.
+   */
+  public function getSecretKey() {
+    $secret = \Drupal::config('affiliates_connect_amazon.settings')->get('amazon_secret_key');
+    if ($secret) {
+      return $secret;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Returns the access key needed for API calls.
+   */
+  public function getAccessKey() {
+    $access = \Drupal::config('affiliates_connect_amazon.settings')->get('amazon_access_key');
+    if ($access) {
+      return $access;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Collect response from affiliate api url using the Guzzle HTTP client.
    *
    * @param string $url
    *   The API endpoint through which the request is to be made.
@@ -39,7 +108,6 @@ class TestAPIController extends ControllerBase {
   public function get($url) {
 
     $client = new Client();
-
     try {
       $response = $client->get($url);
     }
@@ -47,21 +115,30 @@ class TestAPIController extends ControllerBase {
       $args = ['%site' => $url, '%error' => $e->getMessage()];
       throw new \RuntimeException($this->t('This %site seems to be broken because of error "%error".', $args));
     }
-
     return $response;
   }
 
   /**
-   * Fetches product categories.
+   * Gets information about an item, or array of items, from Amazon PA API's
+   * ItemLookup operation.
+   *
+   * @param array|string $items
+   *   String containing a single ASIN or an array of ASINs to look up.
    *
    * @return array
    *   Collection of categories along with endpoint url.
    */
-  public function categories() {
+  public function lookup($items) {
 
-    $associate_id = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
-    $access_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
-    $secret_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_secret_key');
+    if (empty($items)) {
+      throw new \InvalidArgumentException('Calling lookup without anything to lookup!');
+    }
+    if (!is_array($items)) {
+      $items = [$items];
+    }
+    if (empty($this->access_key) || empty($this->associate_id) || empty($this->secret_key)) {
+      throw new \LogicException('Lookup called without valid access key, secret, or associate ID.');
+    }
 
     $url = 'http://webservices.amazon.com/onca/xml' . $associate_id . '.xml';
 
@@ -73,6 +150,10 @@ class TestAPIController extends ControllerBase {
         'ItemId' => implode(',', $asins),
         'ResponseGroup' => 'Small,Images',
         'Operation' => 'ItemLookup',
+        'IdType' => 'ASIN',
+        'AssociateTag' => $associate_id,
+        'AWSAccessKeyId' => $access_key,
+        'Timestamp' => $timestamp,
       ]);
       $results = array_merge($results, $request->execute()->getResults());
     }
@@ -83,11 +164,11 @@ class TestAPIController extends ControllerBase {
     $json = json_encode($contents);
     $body = json_decode($json, true);
 
-    $categories = [];
-    foreach ($body['apiGroups']['affiliate']['apiLists'] as $key => $value) {
-      $categories[$key] = $value['availabletypes']['v1.1.0']['get'];
-    }
-    return $categories;
+#    $categories = [];
+#    foreach ($body['apiGroups']['affiliate']['apiLists'] as $key => $value) {
+#      $categories[$key] = $value['availabletypes']['v1.1.0']['get'];
+#    }
+#    return $categories;
   }
 
   /**
@@ -99,10 +180,6 @@ class TestAPIController extends ControllerBase {
    */
   public function products($item_url) {
 
-    $associate_id = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
-    $access_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_associate_id');
-    $secret_key = $this->config('affiliates_connect_amazon.settings')->get('amazon_secret_key');
-
     $results = [];
     foreach(array_chunk($items, 10) as $asins) {
       $request = new AmazonRequest($this->$secret_key, $this->$access_key, $this->$associate_id);
@@ -111,6 +188,10 @@ class TestAPIController extends ControllerBase {
         'ItemId' => implode(',', $asins),
         'ResponseGroup' => 'Small,Images',
         'Operation' => 'ItemLookup',
+        'IdType' => 'ASIN',
+        'AssociateTag' => $associate_id,
+        'AWSAccessKeyId' => $access_key,
+        'Timestamp' => $timestamp,
       ]);
       $results = array_merge($results, $request->execute()->getResults());
     }
@@ -120,6 +201,7 @@ class TestAPIController extends ControllerBase {
     $contents = new SimpleXMLElement($response->getBody()->getContents());
     $json = json_encode($contents);
     $item_data = json_decode($json, true);
+    
     foreach ($item_data['items'] as $key => $value) {
       try {
         $uid = \Drupal::currentUser()->id();
