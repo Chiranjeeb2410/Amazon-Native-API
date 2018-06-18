@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Drupal\affiliates_connect\Entity\AffiliatesProduct;
+use Drupal\affiliates_connect_amazon\AmazonAPIRequest;
 
 /**
  * Controller routines for test_api routes.
@@ -140,7 +141,7 @@ class TestAPIController extends ControllerBase {
       throw new \LogicException('Lookup called without valid access key, secret, or associate ID.');
     }
 
-    $url = 'http://webservices.amazon.com/onca/xml' . $associate_id . '.xml';
+    $url = 'http://webservices.amazon.in/onca/xml' . $associate_id . '.xml';
 
     $results = [];
     foreach(array_chunk($items, 10) as $asins) {
@@ -201,7 +202,6 @@ class TestAPIController extends ControllerBase {
     $contents = new SimpleXMLElement($response->getBody()->getContents());
     $json = json_encode($contents);
     $item_data = json_decode($json, true);
-    
     foreach ($item_data['items'] as $key => $value) {
       try {
         $uid = \Drupal::currentUser()->id();
